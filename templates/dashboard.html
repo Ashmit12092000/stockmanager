@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - StockFlow Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h1 class="display-6 fw-bold mb-1" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Welcome back, {{ current_user.username }}!</h1>
+                    <p class="text-muted fw-medium">Here's what's happening with your inventory today</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">{{ current_user.role.title() }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modern Statistics Cards -->
+    <div class="row mb-5 g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card dashboard-card text-white h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-cube fa-3x opacity-75"></i>
+                    </div>
+                    <h2 class="display-4 fw-bold mb-1">{{ total_items }}</h2>
+                    <p class="mb-0 fw-medium opacity-75">Total Items</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card dashboard-card text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt fa-3x opacity-75"></i>
+                    </div>
+                    <h2 class="display-4 fw-bold mb-1">{{ total_locations }}</h2>
+                    <p class="mb-0 fw-medium opacity-75">Storage Locations</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card dashboard-card text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-3x opacity-75"></i>
+                    </div>
+                    <h2 class="display-4 fw-bold mb-1">{{ pending_requests }}</h2>
+                    <p class="mb-0 fw-medium opacity-75">Pending Approvals</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="card dashboard-card text-white h-100" style="background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x opacity-75"></i>
+                    </div>
+                    <h2 class="display-4 fw-bold mb-1">{{ low_stock|length }}</h2>
+                    <p class="mb-0 fw-medium opacity-75">Low Stock Alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Stock Entries -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Recent Stock Entries</h5>
+                    <a href="{{ url_for('main.stock_entries') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_entries %}
+                        <div class="list-group list-group-flush">
+                            {% for entry in recent_entries %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ entry.item.name }}</h6>
+                                    <small class="text-muted">{{ entry.location.office }} - {{ entry.location.room_store }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success">+{{ entry.quantity_procured }}</span>
+                                    <br>
+                                    <small class="text-muted">{{ entry.created_at.strftime('%m/%d') }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No recent stock entries.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Stock Requests -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-minus-circle me-2"></i>Recent Issue Requests</h5>
+                    <a href="{{ url_for('main.stock_issues') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_requests %}
+                        <div class="list-group list-group-flush">
+                            {% for request in recent_requests %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ request.request_number }}</h6>
+                                    <small class="text-muted">{{ request.requester.name }} - {{ request.department.name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge {% if request.status == 'approved' %}bg-success{% elif request.status == 'pending' %}bg-warning{% elif request.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {{ request.status.title() }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ request.created_at.strftime('%m/%d') }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No recent issue requests.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    {% if low_stock %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for balance, item, location in low_stock %}
+                        <div class="col-lg-4 col-md-6 mb-2">
+                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                <div>
+                                    <strong>{{ item.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ location.office }} - {{ location.room_store }}</small>
+                                </div>
+                                <span class="badge bg-danger">{{ balance.balance }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

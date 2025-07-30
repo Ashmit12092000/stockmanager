@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Employees Master - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-users me-2"></i>Employees Master</h2>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('main.add_employee') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add New Employee
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search employees..." value="{{ search }}">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if search %}
+                <a href="{{ url_for('main.employees') }}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Form -->
+    {% if mode == 'add' %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Add New Employee
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    {{ form.emp_id.label(class="form-label") }}
+                                    {{ form.emp_id(class="form-control" + (" is-invalid" if form.emp_id.errors else "")) }}
+                                    {% if form.emp_id.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.emp_id.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    {{ form.department_id.label(class="form-label") }}
+                                    {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+                                    {% if form.department_id.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.department_id.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    {{ form.user_id.label(class="form-label") }}
+                                    {{ form.user_id(class="form-select") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Add Employee
+                            </button>
+                            <a href="{{ url_for('main.employees') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Employees Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Employees List ({{ employees|length }} employees)</h5>
+                </div>
+                <div class="card-body">
+                    {% if employees %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Employee ID</th>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>User Account</th>
+                                        <th>Created</th>
+                                        {% if current_user.role == 'admin' %}
+                                        <th>Actions</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emp in employees %}
+                                    <tr>
+                                        <td><strong>{{ emp.emp_id }}</strong></td>
+                                        <td>{{ emp.name }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ emp.department.code }}</span>
+                                            {{ emp.department.name }}
+                                        </td>
+                                        <td>
+                                            {% if emp.user %}
+                                                <span class="badge bg-success">{{ emp.user.username }}</span>
+                                            {% else %}
+                                                <span class="text-muted">No account</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ emp.created_at.strftime('%Y-%m-%d') }}</td>
+                                        {% if current_user.role == 'admin' %}
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" disabled>
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" disabled>
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No employees found</h5>
+                            <p class="text-muted">
+                                {% if search %}
+                                    No employees match your search criteria.
+                                {% else %}
+                                    Start by adding your first employee.
+                                {% endif %}
+                            </p>
+                            {% if current_user.role == 'admin' and not search %}
+                            <a href="{{ url_for('main.add_employee') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add First Employee
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

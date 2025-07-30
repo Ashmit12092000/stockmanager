@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Create User - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create New User</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username *</label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    <div class="form-text">Username must be unique and cannot be changed later.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password *</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                    <div class="form-text">Minimum 6 characters recommended.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">User Role *</label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="">Select Role</option>
+                                        <option value="admin">Administrator</option>
+                                        <option value="hod">Head of Department (HOD)</option>
+                                        <option value="approver">Conditional Approver</option>
+                                        <option value="employee">Employee</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Role Descriptions -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Role Permissions:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Administrator:</strong> Full system access, can manage masters, create users, issue stock</li>
+                                <li><strong>HOD:</strong> Can approve stock requests from their departments</li>
+                                <li><strong>Conditional Approver:</strong> Can provide conditional approval in alternate flow</li>
+                                <li><strong>Employee:</strong> Can create and view stock requests</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i>Create User
+                            </button>
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Existing Users List -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Existing Users</h5>
+                </div>
+                <div class="card-body">
+                    <!-- This would need to be populated with actual user data from the view -->
+                    <p class="text-muted">User management features can be extended here to show existing users, edit roles, etc.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const roleDescriptions = {
+        'admin': 'Full system access including master data management, user creation, and stock operations.',
+        'hod': 'Can approve stock requests from departments they manage.',
+        'approver': 'Can provide conditional approval for requests in alternate approval flow.',
+        'employee': 'Can create stock requests and view their own requests.'
+    };
+    
+    roleSelect.addEventListener('change', function() {
+        const description = roleDescriptions[this.value];
+        const existingHelp = document.querySelector('.role-help');
+        if (existingHelp) {
+            existingHelp.remove();
+        }
+        
+        if (description) {
+            const helpDiv = document.createElement('div');
+            helpDiv.className = 'form-text role-help';
+            helpDiv.textContent = description;
+            this.parentNode.appendChild(helpDiv);
+        }
+    });
+});
+</script>
+{% endblock %}

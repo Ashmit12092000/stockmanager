@@ -27,7 +27,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -43,24 +43,63 @@
                                         <option value="">Select Role</option>
                                         <option value="admin">Administrator</option>
                                         <option value="hod">Head of Department (HOD)</option>
-                                        <option value="approver">Conditional Approver</option>
                                         <option value="employee">Employee</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="emp_id" class="form-label">Employee ID *</label>
+                                    <input type="text" class="form-control" id="emp_id" name="emp_id" required>
+                                    <div class="form-text">Unique employee identification number.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="employee_name" class="form-label">Employee Name *</label>
+                                    <input type="text" class="form-control" id="employee_name" name="employee_name" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department_id" class="form-label">Department *</label>
+                                    <select class="form-select" id="department_id" name="department_id" required>
+                                        <option value="">Select Department</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept.id }}">{{ dept.code }} - {{ dept.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="warehouse_id" class="form-label">Warehouse/Location *</label>
+                                    <select class="form-select" id="warehouse_id" name="warehouse_id" required>
+                                        <option value="">Select Warehouse</option>
+                                        {% for location in locations %}
+                                        <option value="{{ location.id }}">{{ location.office }} - {{ location.room_store }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Role Descriptions -->
                         <div class="alert alert-info">
                             <h6><i class="fas fa-info-circle me-2"></i>Role Permissions:</h6>
                             <ul class="mb-0">
                                 <li><strong>Administrator:</strong> Full system access, can manage masters, create users, issue stock</li>
                                 <li><strong>HOD:</strong> Can approve stock requests from their departments</li>
-                                <li><strong>Conditional Approver:</strong> Can provide conditional approval in alternate flow</li>
                                 <li><strong>Employee:</strong> Can create and view stock requests</li>
                             </ul>
                         </div>
-                        
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-user-plus me-2"></i>Create User
@@ -72,15 +111,61 @@
                     </form>
                 </div>
             </div>
-            
+
             <!-- Existing Users List -->
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-users me-2"></i>Existing Users</h5>
                 </div>
                 <div class="card-body">
-                    <!-- This would need to be populated with actual user data from the view -->
-                    <p class="text-muted">User management features can be extended here to show existing users, edit roles, etc.</p>
+                    {% if existing_users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Warehouse</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in existing_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.employee_profile.emp_id if user.employee_profile else 'N/A' }}</td>
+                                    <td>{{ user.employee_profile.name if user.employee_profile else 'N/A' }}</td>
+                                    <td>
+                                        {% if user.employee_profile and user.employee_profile.department %}
+                                        <span class="badge bg-primary">{{ user.employee_profile.department.code }}</span>
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.employee_profile and user.employee_profile.warehouse %}
+                                        {{ user.employee_profile.warehouse.office }} - {{ user.employee_profile.warehouse.room_store }}
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-info">{{ user.role.title() }}</span></td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if user.is_active else 'bg-secondary' }}">
+                                            {{ 'Active' if user.is_active else 'Inactive' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No users found.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -93,17 +178,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const roleDescriptions = {
         'admin': 'Full system access including master data management, user creation, and stock operations.',
         'hod': 'Can approve stock requests from departments they manage.',
-        'approver': 'Can provide conditional approval for requests in alternate approval flow.',
         'employee': 'Can create stock requests and view their own requests.'
     };
-    
+
     roleSelect.addEventListener('change', function() {
         const description = roleDescriptions[this.value];
         const existingHelp = document.querySelector('.role-help');
         if (existingHelp) {
             existingHelp.remove();
         }
-        
+
         if (description) {
             const helpDiv = document.createElement('div');
             helpDiv.className = 'form-text role-help';

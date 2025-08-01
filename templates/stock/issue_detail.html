@@ -14,7 +14,7 @@
                     <li class="breadcrumb-item active">{{ request.request_number }}</li>
                 </ol>
             </nav>
-            
+
             <div class="d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-file-alt me-2"></i>Request {{ request.request_number }}</h2>
                 <div>
@@ -72,20 +72,7 @@
                         </div>
                         <div class="col-md-6">
                             <table class="table table-borderless">
-                                <tr>
-                                    <td><strong>Approval Flow:</strong></td>
-                                    <td>
-                                        <span class="badge {{ 'bg-info' if request.approval_flow == 'alternate' else 'bg-secondary' }}">
-                                            {{ request.approval_flow.title() }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                {% if request.approval_flow == 'alternate' and request.approver %}
-                                <tr>
-                                    <td><strong>Conditional Approver:</strong></td>
-                                    <td>{{ request.approver.username }}</td>
-                                </tr>
-                                {% endif %}
+                                
                                 <tr>
                                     <td><strong>Created:</strong></td>
                                     <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
@@ -198,7 +185,7 @@
                             <i class="fas fa-paper-plane me-2"></i>Add Items First
                         </button>
                         {% endif %}
-                    {% elif request.status == 'pending' and ((current_user.role == 'hod' and request.department.hod_id == current_user.id) or (current_user.role == 'approver' and request.approver_id == current_user.id)) %}
+                    {% elif request.status == 'pending' and current_user.role == 'hod' and request.department.hod_id == current_user.id %}
                         <form method="POST" action="{{ url_for('main.approve_issue_request', id=request.id) }}">
                             {{ approval_form.hidden_tag() }}
                             {{ approval_form.action(value='approve') }}
@@ -207,7 +194,7 @@
                                 <i class="fas fa-check me-2"></i>Approve Request
                             </button>
                         </form>
-                        
+
                         <button type="button" class="btn btn-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#rejectModal">
                             <i class="fas fa-times me-2"></i>Reject Request
                         </button>
@@ -216,7 +203,7 @@
                             <i class="fas fa-info-circle me-2"></i>
                             This request was conditionally approved and is waiting for your final approval.
                         </div>
-                        
+
                         <form method="POST" action="{{ url_for('main.approve_issue_request', id=request.id) }}">
                             {{ approval_form.hidden_tag() }}
                             {{ approval_form.action(value='approve') }}
@@ -225,7 +212,7 @@
                                 <i class="fas fa-check me-2"></i>Final Approval
                             </button>
                         </form>
-                        
+
                         <button type="button" class="btn btn-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#rejectModal">
                             <i class="fas fa-times me-2"></i>Reject Request
                         </button>
@@ -273,7 +260,7 @@
                                 <p class="mb-0">By {{ request.creator.username }}</p>
                             </div>
                         </div>
-                        
+
                         {% if request.status != 'draft' %}
                         <div class="timeline-item">
                             <div class="timeline-marker bg-warning"></div>
@@ -283,7 +270,7 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if request.conditional_approved_by %}
                         <div class="timeline-item">
                             <div class="timeline-marker bg-info"></div>
@@ -294,7 +281,7 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if request.hod_approved_by %}
                         <div class="timeline-item">
                             <div class="timeline-marker bg-success"></div>
@@ -305,7 +292,7 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if request.issued_by %}
                         <div class="timeline-item">
                             <div class="timeline-marker bg-info"></div>
@@ -366,7 +353,7 @@
 {% endif %}
 
 <!-- Reject Modal -->
-{% if (request.status == 'pending' and ((current_user.role == 'hod' and request.department.hod_id == current_user.id) or (current_user.role == 'approver' and request.approver_id == current_user.id))) or (request.status == 'conditional_approved' and current_user.role == 'hod' and request.department.hod_id == current_user.id) %}
+{% if (request.status == 'pending' and current_user.role == 'hod' and request.department.hod_id == current_user.id) or (request.status == 'conditional_approved' and current_user.role == 'hod' and request.department.hod_id == current_user.id) %}
 <div class="modal fade" id="rejectModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -410,17 +397,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('available-{{ item.item_id }}-{{ item.location_id }}').innerHTML = '<span class="badge bg-secondary">Error</span>';
         });
     {% endfor %}
-    
+
     // Handle item and location selection in add item modal
     const itemSelect = document.getElementById('itemSelect');
     const locationSelect = document.getElementById('locationSelect');
     const stockInfo = document.getElementById('stockInfo');
     const availableStock = document.getElementById('availableStock');
-    
+
     function updateStockInfo() {
         const itemId = itemSelect.value;
         const locationId = locationSelect.value;
-        
+
         if (itemId && locationId) {
             fetch(`/api/stock_balance/${itemId}/${locationId}`)
                 .then(response => response.json())
@@ -443,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
             stockInfo.style.display = 'none';
         }
     }
-    
+
     if (itemSelect && locationSelect) {
         itemSelect.addEventListener('change', updateStockInfo);
         locationSelect.addEventListener('change', updateStockInfo);

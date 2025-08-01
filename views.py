@@ -65,6 +65,17 @@ def dashboard():
 
     # Get low stock items (items with balance <= 5)
     low_stock = db.session.query(StockBalance, Item, Location).join(Item).join(Location).filter(StockBalance.balance <= 5).all()
+    
+    # Calculate additional metrics for progress bars
+    total_stock_value = db.session.query(func.sum(StockBalance.balance)).scalar() or 0
+    active_departments = Department.query.filter_by(is_active=True).count()
+    total_users = User.query.filter_by(is_active=True).count()
+    
+    # Calculate progress percentages
+    items_progress = min((total_items / 100) * 100, 100) if total_items > 0 else 2
+    locations_progress = min((total_locations / 50) * 100, 100) if total_locations > 0 else 2
+    pending_progress = min((pending_requests / 20) * 100, 100) if pending_requests > 0 else 2
+    low_stock_progress = min((len(low_stock) / 15) * 100, 100) if low_stock else 1
 
     return render_template('dashboard.html', 
                          total_items=total_items,
@@ -73,7 +84,14 @@ def dashboard():
                          recent_entries=recent_entries,
                          recent_requests=recent_requests,
                          low_stock=low_stock,
-                         user_department=user_department)
+                         user_department=user_department,
+                         items_progress=items_progress,
+                         locations_progress=locations_progress,
+                         pending_progress=pending_progress,
+                         low_stock_progress=low_stock_progress,
+                         total_stock_value=total_stock_value,
+                         active_departments=active_departments,
+                         total_users=total_users)
 
 # Item Master Routes
 @main_bp.route('/masters/items')

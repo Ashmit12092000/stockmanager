@@ -58,12 +58,17 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-1px);
 }
 
+
 .dropdown-menu {
     border: none;
     box-shadow: var(--shadow);
     border-radius: var(--bs-border-radius);
     margin-top: 0.5rem;
+    z-index: 1050;
+    position: absolute;
+    
 }
+ 
 
 .dropdown-item {
     font-weight: 500;

@@ -64,9 +64,27 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--shadow);
     border-radius: var(--bs-border-radius);
     margin-top: 0.5rem;
-    z-index: 9999;
-    position: absolute;
+    z-index: 9999 !important;
+    position: absolute !important;
     
+}
+
+/* Ensure navbar has proper stacking context */
+.navbar {
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1000;
+}
+
+/* Override any competing z-index from Bootstrap or other elements */
+.dropdown {
+    position: relative;
+    z-index: 1050;
+}
+
+.dropdown-toggle::after {
+    margin-left: 0.5rem;
 }
  
 

@@ -578,6 +578,7 @@ def add_stock_issue():
             department_id=form.department_id.data,
             purpose=form.purpose.data,
             approval_flow=form.approval_flow.data,
+            approver_id=form.approver_id.data if form.approver_id.data != 0 else None,
             created_by=current_user.id
         )
         db.session.add(request_obj)

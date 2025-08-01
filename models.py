@@ -76,7 +76,9 @@ class StockIssueRequest(db.Model):
     requester_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
     purpose = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(50), default='draft')  # draft, pending, approved, rejected, issued
+    status = db.Column(db.String(50), default='draft')  # draft, pending, approved, rejected, issued, conditional_approved
+    approval_flow = db.Column(db.String(20), default='regular')  # regular, alternate
+    approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # for alternate flow
     hod_approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     hod_approved_at = db.Column(db.DateTime, nullable=True)
     issued_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
@@ -88,6 +90,7 @@ class StockIssueRequest(db.Model):
     
     requester = db.relationship('Employee', backref='stock_requests')
     department = db.relationship('Department', backref='stock_requests')
+    approver = db.relationship('User', foreign_keys=[approver_id], backref='approved_requests')
     hod_approver = db.relationship('User', foreign_keys=[hod_approved_by], backref='hod_approvals')
     issuer = db.relationship('User', foreign_keys=[issued_by], backref='issued_requests')
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_requests')

@@ -59,6 +59,8 @@ class StockIssueRequestForm(FlaskForm):
     requester_id = SelectField('Requester', coerce=int, validators=[DataRequired()])
     department_id = SelectField('Department', coerce=int, validators=[DataRequired()])
     purpose = TextAreaField('Purpose', validators=[DataRequired()])
+    approval_flow = SelectField('Approval Flow', choices=[('regular', 'Regular'), ('alternate', 'Alternate')], default='regular')
+    approver_id = SelectField('Approver (for Alternate Flow)', coerce=int, validators=[Optional()])
     
 
     def __init__(self, user=None, *args, **kwargs):
@@ -84,6 +86,10 @@ class StockIssueRequestForm(FlaskForm):
             # Default - all options
             self.requester_id.choices = [(e.id, f"{e.emp_id} - {e.name}") for e in Employee.query.filter_by(is_active=True).all()]
             self.department_id.choices = [(d.id, f"{d.code} - {d.name}") for d in Department.query.filter_by(is_active=True).all()]
+        
+        # Set approver choices (users with hod or admin role)
+        approver_users = User.query.filter(User.role.in_(['hod', 'admin']), User.is_active == True).all()
+        self.approver_id.choices = [(0, 'Select Approver')] + [(u.id, f"{u.username} ({u.email})") for u in approver_users]
         
         
 

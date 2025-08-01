@@ -257,7 +257,14 @@ def edit_department(id):
             flash('Department updated successfully.', 'success')
             return redirect(url_for('main.departments'))
 
-    return render_template('masters/departments.html', form=form, department=department, mode='edit')
+    # Get all departments for the list view
+    search = request.args.get('search', '')
+    departments = Department.query.filter_by(is_active=True)
+    if search:
+        departments = departments.filter(or_(Department.code.contains(search), Department.name.contains(search)))
+    departments = departments.all()
+
+    return render_template('masters/departments.html', form=form, department=department, departments=departments, mode='edit', search=search)
 
 @main_bp.route('/masters/departments/delete/<int:id>')
 @login_required
@@ -360,7 +367,14 @@ def edit_employee(id):
             flash('Employee updated successfully.', 'success')
             return redirect(url_for('main.employees'))
 
-    return render_template('masters/employees.html', form=form, employee=employee, mode='edit')
+    # Get all employees for the list view
+    search = request.args.get('search', '')
+    employees = Employee.query.filter_by(is_active=True)
+    if search:
+        employees = employees.filter(or_(Employee.emp_id.contains(search), Employee.name.contains(search)))
+    employees = employees.all()
+
+    return render_template('masters/employees.html', form=form, employee=employee, employees=employees, mode='edit', search=search)
 
 @main_bp.route('/masters/employees/delete/<int:id>')
 @login_required

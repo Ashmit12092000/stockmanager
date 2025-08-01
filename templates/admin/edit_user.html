@@ -1,0 +1,168 @@
+
+{% extends "base.html" %}
+
+{% block title %}Edit User - Stock Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1><i class="fas fa-user-edit me-2"></i>Edit User</h1>
+                        <p class="text-muted">Update user account and employee information</p>
+                    </div>
+                    <a href="{{ url_for('main.user_management') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>User Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username *</label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ user.username }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Leave blank to keep current password">
+                                    <div class="form-text">Leave blank if you don't want to change the password</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">User Role *</label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="employee" {% if user.role == 'employee' %}selected{% endif %}>Employee</option>
+                                        <option value="hod" {% if user.role == 'hod' %}selected{% endif %}>Head of Department</option>
+                                        <option value="approver" {% if user.role == 'approver' %}selected{% endif %}>Approver</option>
+                                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Administrator</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h6 class="mb-3"><i class="fas fa-id-card me-2"></i>Employee Information</h6>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="emp_id" class="form-label">Employee ID *</label>
+                                    <input type="text" class="form-control" id="emp_id" name="emp_id" 
+                                           value="{{ employee.emp_id if employee }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="employee_name" class="form-label">Employee Name *</label>
+                                    <input type="text" class="form-control" id="employee_name" name="employee_name" 
+                                           value="{{ employee.name if employee }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department_id" class="form-label">Department *</label>
+                                    <select class="form-select" id="department_id" name="department_id" required>
+                                        <option value="">Select Department</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept.id }}" 
+                                                {% if employee and employee.department_id == dept.id %}selected{% endif %}>
+                                            {{ dept.code }} - {{ dept.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="warehouse_id" class="form-label">Assigned Warehouse</label>
+                                    <select class="form-select" id="warehouse_id" name="warehouse_id">
+                                        <option value="">Select Warehouse</option>
+                                        {% for location in locations %}
+                                        <option value="{{ location.id }}" 
+                                                {% if employee and employee.warehouse_id == location.id %}selected{% endif %}>
+                                            {{ location.office }} - {{ location.room_store }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">This determines which warehouse locations the user can access</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('main.user_management') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>User Roles
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-2">
+                            <span class="badge bg-success me-2">Employee</span>
+                            Can create stock requests and view own requests
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-info me-2">Approver</span>
+                            Can provide conditional approvals for alternate flow
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-warning me-2">HOD</span>
+                            Can approve requests from their department and add stock entries
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-danger me-2">Admin</span>
+                            Full system access including master data and user management
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -561,7 +561,10 @@ def stock_issues():
         # HODs see requests from their departments
         hod_departments = Department.query.filter_by(hod_id=current_user.id).all()
         dept_ids = [d.id for d in hod_departments]
-        requests = StockIssueRequest.query.filter(StockIssueRequest.department_id.in_(dept_ids)).order_by(StockIssueRequest.created_at.desc()).all()
+        if dept_ids:
+            requests = StockIssueRequest.query.filter(StockIssueRequest.department_id.in_(dept_ids)).order_by(StockIssueRequest.created_at.desc()).all()
+        else:
+            requests = []
     else:
         # Regular users see only their requests
         requests = StockIssueRequest.query.filter_by(created_by=current_user.id).order_by(StockIssueRequest.created_at.desc()).all()
@@ -761,15 +764,26 @@ def issue_stock(id):
 @login_required
 def pending_approvals():
     if current_user.role == 'hod':
-        # HOD sees requests from their departments
+        # HOD sees requests from their departments that are pending approval
         hod_departments = Department.query.filter_by(hod_id=current_user.id).all()
         dept_ids = [d.id for d in hod_departments]
+        if dept_ids:
+            requests = StockIssueRequest.query.filter(
+                and_(
+                    StockIssueRequest.department_id.in_(dept_ids),
+                    StockIssueRequest.status == 'pending'
+                )
+            ).order_by(StockIssueRequest.created_at.desc()).all()
+        else:
+            requests = []
+    elif current_user.role == 'approver':
+        # Approvers see requests assigned to them for conditional approval
         requests = StockIssueRequest.query.filter(
             and_(
-                StockIssueRequest.department_id.in_(dept_ids),
+                StockIssueRequest.approver_id == current_user.id,
                 StockIssueRequest.status == 'pending'
             )
-        ).all()
+        ).order_by(StockIssueRequest.created_at.desc()).all()
     else:
         requests = []
 

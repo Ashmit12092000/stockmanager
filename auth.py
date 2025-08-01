@@ -40,21 +40,34 @@ def create_user():
         flash('You do not have permission to create users.', 'error')
         return redirect(url_for('main.dashboard'))
     
+    # Get departments and locations for dropdowns
+    from models import Department, Location, Employee
+    departments = Department.query.filter_by(is_active=True).all()
+    locations = Location.query.filter_by(is_active=True).all()
+    
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         role = request.form.get('role')
+        emp_id = request.form.get('emp_id')
+        employee_name = request.form.get('employee_name')
+        department_id = request.form.get('department_id')
+        warehouse_id = request.form.get('warehouse_id')
         
         # Check if user already exists
         existing_user = User.query.filter_by(username=username).first()
         existing_email = User.query.filter_by(email=email).first()
+        existing_emp = Employee.query.filter_by(emp_id=emp_id).first()
         
         if existing_user:
             flash('Username already exists.', 'error')
         elif existing_email:
             flash('Email already exists.', 'error')
+        elif existing_emp:
+            flash('Employee ID already exists.', 'error')
         else:
+            # Create user account
             user = User(
                 username=username,
                 email=email,
@@ -62,8 +75,26 @@ def create_user():
                 role=role
             )
             db.session.add(user)
+            db.session.flush()  # Get the user ID
+            
+            # Create employee record
+            employee = Employee(
+                emp_id=emp_id,
+                name=employee_name,
+                department_id=int(department_id),
+                warehouse_id=int(warehouse_id) if warehouse_id else None,
+                user_id=user.id
+            )
+            db.session.add(employee)
             db.session.commit()
-            flash('User created successfully.', 'success')
+            
+            flash('User and Employee record created successfully.', 'success')
             return redirect(url_for('main.dashboard'))
     
-    return render_template('create_user.html')
+    # Get existing users for display
+    existing_users = User.query.all()
+    
+    return render_template('create_user.html', 
+                         departments=departments, 
+                         locations=locations,
+                         existing_users=existing_users)

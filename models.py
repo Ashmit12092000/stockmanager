@@ -8,7 +8,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='employee')  # admin, hod, approver, employee
+    role = db.Column(db.String(50), nullable=False, default='employee')  # admin, hod, employee
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -27,11 +27,13 @@ class Employee(db.Model):
     emp_id = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     department = db.relationship('Department', backref='employees')
+    warehouse = db.relationship('Location', backref='assigned_employees')
     user = db.relationship('User', backref='employee_profile')
 
 class Location(db.Model):
@@ -75,12 +77,8 @@ class StockIssueRequest(db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)
     purpose = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(50), default='draft')  # draft, pending, approved, rejected, issued
-    approval_flow = db.Column(db.String(20), default='regular')  # regular, alternate
-    approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # for alternate flow
     hod_approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     hod_approved_at = db.Column(db.DateTime, nullable=True)
-    conditional_approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    conditional_approved_at = db.Column(db.DateTime, nullable=True)
     issued_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     issued_at = db.Column(db.DateTime, nullable=True)
     rejection_reason = db.Column(db.Text)
@@ -90,9 +88,7 @@ class StockIssueRequest(db.Model):
     
     requester = db.relationship('Employee', backref='stock_requests')
     department = db.relationship('Department', backref='stock_requests')
-    approver = db.relationship('User', foreign_keys=[approver_id], backref='alternate_approvals')
     hod_approver = db.relationship('User', foreign_keys=[hod_approved_by], backref='hod_approvals')
-    conditional_approver = db.relationship('User', foreign_keys=[conditional_approved_by], backref='conditional_approvals')
     issuer = db.relationship('User', foreign_keys=[issued_by], backref='issued_requests')
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_requests')
 

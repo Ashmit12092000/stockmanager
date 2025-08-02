@@ -1,6 +1,7 @@
+
 {% extends "base.html" %}
 
-{% block title %}Create User - Stock Management System{% endblock %}
+{% block title %}Assign User Role - Stock Management System{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -8,10 +9,47 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create New User</h5>
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Assign User Role to Employee</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" id="createUserForm">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="employee_id" class="form-label">Select Employee *</label>
+                                    <select class="form-select" id="employee_id" name="employee_id" required>
+                                        <option value="">Select Employee</option>
+                                        {% for emp in employees %}
+                                        <option value="{{ emp.id }}" 
+                                                data-name="{{ emp.name }}" 
+                                                data-dept-code="{{ emp.department.code }}" 
+                                                data-dept-name="{{ emp.department.name }}"
+                                                data-dept-id="{{ emp.department.id }}">
+                                            {{ emp.emp_id }} - {{ emp.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Only employees without user accounts are shown.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Details (Auto-populated) -->
+                        <div class="row" id="employeeDetails" style="display: none;">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Employee Name</label>
+                                    <input type="text" class="form-control" id="display_name" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Department</label>
+                                    <input type="text" class="form-control" id="display_department" readonly>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -52,40 +90,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="emp_id" class="form-label">Employee ID *</label>
-                                    <input type="text" class="form-control" id="emp_id" name="emp_id" required>
-                                    <div class="form-text">Unique employee identification number.</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="employee_name" class="form-label">Employee Name *</label>
-                                    <input type="text" class="form-control" id="employee_name" name="employee_name" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="department_id" class="form-label">Department *</label>
-                                    <select class="form-select" id="department_id" name="department_id" required>
-                                        <option value="">Select Department</option>
-                                        {% for dept in departments %}
-                                        <option value="{{ dept.id }}">{{ dept.code }} - {{ dept.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="warehouse_id" class="form-label">Warehouse/Location *</label>
-                                    <select class="form-select" id="warehouse_id" name="warehouse_id" required>
+                                    <label for="warehouse_id" class="form-label">Assigned Warehouse</label>
+                                    <select class="form-select" id="warehouse_id" name="warehouse_id">
                                         <option value="">Select Warehouse</option>
                                         {% for location in locations %}
                                         <option value="{{ location.id }}">{{ location.office }} - {{ location.room_store }}</option>
                                         {% endfor %}
                                     </select>
+                                    <div class="form-text">This determines which warehouse locations the user can access.</div>
                                 </div>
                             </div>
                         </div>
@@ -102,7 +114,7 @@
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-user-plus me-2"></i>Create User
+                                <i class="fas fa-user-plus me-2"></i>Create User Account
                             </button>
                             <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
                                 <i class="fas fa-times me-2"></i>Cancel
@@ -168,12 +180,54 @@
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Employees without User Accounts -->
+            {% if employees %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-clock me-2"></i>Employees Without User Accounts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp in employees %}
+                                <tr>
+                                    <td>{{ emp.emp_id }}</td>
+                                    <td>{{ emp.name }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ emp.department.code }} - {{ emp.department.name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">No User Account</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const employeeSelect = document.getElementById('employee_id');
+    const employeeDetails = document.getElementById('employeeDetails');
+    const displayName = document.getElementById('display_name');
+    const displayDepartment = document.getElementById('display_department');
+
     const roleSelect = document.getElementById('role');
     const roleDescriptions = {
         'admin': 'Full system access including master data management, user creation, and stock operations.',
@@ -181,6 +235,24 @@ document.addEventListener('DOMContentLoaded', function() {
         'employee': 'Can create stock requests and view their own requests.'
     };
 
+    // Handle employee selection
+    employeeSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption.value) {
+            // Show employee details
+            employeeDetails.style.display = 'block';
+            displayName.value = selectedOption.dataset.name;
+            displayDepartment.value = selectedOption.dataset.deptCode + ' - ' + selectedOption.dataset.deptName;
+        } else {
+            // Hide employee details
+            employeeDetails.style.display = 'none';
+            displayName.value = '';
+            displayDepartment.value = '';
+        }
+    });
+
+    // Handle role selection descriptions
     roleSelect.addEventListener('change', function() {
         const description = roleDescriptions[this.value];
         const existingHelp = document.querySelector('.role-help');

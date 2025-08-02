@@ -1066,6 +1066,24 @@ def api_stock_balance(item_id, location_id):
     balance = get_stock_balance(item_id, location_id)
     return jsonify({'balance': balance})
 
+@main_bp.route('/api/employee/<int:employee_id>')
+@login_required
+def api_employee_details(employee_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    employee = Employee.query.get_or_404(employee_id)
+    return jsonify({
+        'id': employee.id,
+        'emp_id': employee.emp_id,
+        'name': employee.name,
+        'department': {
+            'id': employee.department.id,
+            'code': employee.department.code,
+            'name': employee.department.name
+        }
+    })
+
 @main_bp.route('/api/items_by_location/<int:location_id>')
 @login_required
 def api_items_by_location(location_id):

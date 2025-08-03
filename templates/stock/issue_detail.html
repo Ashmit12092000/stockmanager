@@ -72,7 +72,7 @@
                         </div>
                         <div class="col-md-6">
                             <table class="table table-borderless">
-                                
+
                                 <tr>
                                     <td><strong>Created:</strong></td>
                                     <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
@@ -187,8 +187,8 @@
                         {% endif %}
                     {% elif request.status == 'pending' and current_user.role == 'hod' and request.department.hod_id == current_user.id %}
                         <form method="POST" action="{{ url_for('main.approve_issue_request', id=request.id) }}">
-                            {{ approval_form.hidden_tag() }}
-                            {{ approval_form.action(value='approve') }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <input type="hidden" name="action" value="approve">
                             <button type="submit" class="btn btn-success w-100 mb-2"
                                     onclick="return confirm('Are you sure you want to approve this request?')">
                                 <i class="fas fa-check me-2"></i>Approve Request
@@ -205,8 +205,8 @@
                         </div>
 
                         <form method="POST" action="{{ url_for('main.approve_issue_request', id=request.id) }}">
-                            {{ approval_form.hidden_tag() }}
-                            {{ approval_form.action(value='approve') }}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <input type="hidden" name="action" value="approve">
                             <button type="submit" class="btn btn-success w-100 mb-2"
                                     onclick="return confirm('Are you sure you want to give final approval?')">
                                 <i class="fas fa-check me-2"></i>Final Approval
@@ -362,8 +362,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('main.approve_issue_request', id=request.id) }}">
-                {{ approval_form.hidden_tag() }}
-                {{ approval_form.action(value='reject') }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="action" value="reject">
                 <div class="modal-body">
                     <div class="mb-3">
                         {{ approval_form.rejection_reason.label(class="form-label") }}

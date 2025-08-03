@@ -65,12 +65,12 @@ def dashboard():
 
     # Get low stock items (items with balance <= 5)
     low_stock = db.session.query(StockBalance, Item, Location).join(Item).join(Location).filter(StockBalance.balance <= 5).all()
-    
+
     # Calculate additional metrics for progress bars
     total_stock_value = db.session.query(func.sum(StockBalance.balance)).scalar() or 0
     active_departments = Department.query.filter_by(is_active=True).count()
     total_users = User.query.filter_by(is_active=True).count()
-    
+
     # Calculate progress percentages
     items_progress = min((total_items / 100) * 100, 100) if total_items > 0 else 2
     locations_progress = min((total_locations / 50) * 100, 100) if total_locations > 0 else 2
@@ -665,29 +665,6 @@ def add_issue_item(id):
 
     return redirect(url_for('main.stock_issue_detail', id=id))
 
-@main_bp.route('/stock/issues/<int:id>/submit')
-@login_required
-def submit_issue_request(id):
-    request_obj = StockIssueRequest.query.get_or_404(id)
-
-    if request_obj.status != 'draft' or request_obj.created_by != current_user.id:
-        flash('Cannot submit this request.', 'error')
-        return redirect(url_for('main.stock_issue_detail', id=id))
-
-    if not request_obj.items:
-        flash('Cannot submit request without items.', 'error')
-        return redirect(url_for('main.stock_issue_detail', id=id))
-
-    request_obj.status = 'pending'
-    db.session.commit()
-
-    log_audit('stock_issue_request', request_obj.id, 'UPDATE', 
-              old_values={'status': 'draft'}, 
-              new_values={'status': 'pending'})
-
-    flash('Request submitted for approval.', 'success')
-    return redirect(url_for('main.stock_issue_detail', id=id))
-
 @main_bp.route('/stock/issues/<int:id>/approve', methods=['POST'])
 @login_required
 def approve_issue_request(id):
@@ -750,7 +727,7 @@ def issue_stock(id):
         item.quantity_issued = item.quantity_requested
 
     request_obj.status = 'issued'
-    request_obj.issued_by = current_user.id
+    request_obj.issued_by= current_user.id
     request_obj.issued_at = datetime.utcnow()
 
     db.session.commit()
@@ -788,6 +765,31 @@ def pending_approvals():
         requests = []
 
     return render_template('approval/pending.html', requests=requests)
+
+@main_bp.route('/stock/issues/<int:id>/submit')
+@login_required
+def submit_issue_request(id):
+    request_obj = StockIssueRequest.query.get_or_404(id)
+
+    if request_obj.created_by != current_user.id:
+        flash('You can only submit your own requests.', 'error')
+        return redirect(url_for('main.stock_issue_detail', id=id))
+
+    if request_obj.status != 'draft':
+        flash('Request can only be submitted from draft status.', 'error')
+        return redirect(url_for('main.stock_issue_detail', id=id))
+
+    if not request_obj.items:
+        flash('Cannot submit request without items.', 'error')
+        return redirect(url_for('main.stock_issue_detail', id=id))
+
+    request_obj.status = 'pending'
+    request_obj.updated_at = datetime.utcnow()
+    db.session.commit()
+    log_audit('stock_issue_request', request_obj.id, 'SUBMIT')
+
+    flash('Request submitted successfully for approval.', 'success')
+    return redirect(url_for('main.stock_issue_detail', id=id))
 
 # Reports Routes
 @main_bp.route('/reports/stock')
@@ -1071,7 +1073,7 @@ def api_stock_balance(item_id, location_id):
 def api_employee_details(employee_id):
     if current_user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
-    
+
     employee = Employee.query.get_or_404(employee_id)
     return jsonify({
         'id': employee.id,

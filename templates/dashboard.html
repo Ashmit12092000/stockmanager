@@ -1,205 +1,344 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Stock Management System{% endblock %}
+{% block title %}Dashboard - Stock Management{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-header mb-4">
-                <h1><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
-                <p class="text-muted">
-                    Welcome to the Stock Management System
-                    {% if user_department %}
-                        - <span class="text-primary">{{ user_department.name }} Department</span>
-                    {% endif %}
-                </p>
-                {% if current_user.role == 'hod' and user_department %}
-                    <div class="alert alert-info mt-2">
-                        <i class="fas fa-user-tie me-2"></i>
-                        You are managing the <strong>{{ user_department.name }}</strong> department.
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-2xl font-bold leading-7 text-white sm:text-3xl sm:truncate">
+                Dashboard
+            </h2>
+            <p class="mt-1 text-sm text-gray-400">
+                Welcome back, {{ current_user.full_name }}!
+            </p>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {% if current_user.role.value in ['superadmin', 'manager'] %}
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-indigo-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">Total Users</dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.total_users or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-building text-green-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">Departments</dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.total_departments or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-box text-yellow-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">Total Items</dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.total_items or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-map-marker-alt text-purple-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">Locations</dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.total_locations or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_user.role.value == 'hod' %}
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-indigo-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">Department Users</dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.department_users or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-orange-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">Pending Approvals</dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.pending_approvals or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-orange-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">
+                                {% if current_user.role.value in ['superadmin', 'manager'] %}
+                                Pending Requests
+                                {% else %}
+                                My Pending Requests
+                                {% endif %}
+                            </dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.pending_requests or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-400 text-2xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-400 truncate">
+                                {% if current_user.role.value in ['superadmin', 'manager'] %}
+                                Approved Requests
+                                {% else %}
+                                My Approved Requests
+                                {% endif %}
+                            </dt>
+                            <dd class="text-lg font-medium text-white">{{ stats.approved_requests or 0 }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Requests -->
+    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-white">Recent Requests</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-400">Latest stock issue requests</p>
+        </div>
+        <ul class="divide-y divide-gray-700">
+            {% for request in recent_requests %}
+            <li>
+                <a href="{{ url_for('stock_issue.view_request', request_id=request.id) }}" class="block hover:bg-gray-700">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <p class="text-sm font-medium text-indigo-400 truncate">
+                                    {{ request.request_no }}
+                                </p>
+                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if request.status.value == 'Draft' %}bg-gray-700 text-gray-300
+                                    {% elif request.status.value == 'Pending' %}bg-yellow-900 text-yellow-200
+                                    {% elif request.status.value == 'Approved' %}bg-green-900 text-green-200
+                                    {% elif request.status.value == 'Rejected' %}bg-red-900 text-red-200
+                                    {% elif request.status.value == 'Issued' %}bg-blue-900 text-blue-200
+                                    {% endif %}">
+                                    {{ request.status.value }}
+                                </span>
+                            </div>
+                            <div class="ml-2 flex-shrink-0 flex">
+                                <p class="text-sm text-gray-400">
+                                    {{ request.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2 sm:flex sm:justify-between">
+                            <div class="sm:flex">
+                                <p class="flex items-center text-sm text-gray-300">
+                                    <i class="fas fa-user mr-1.5 text-gray-400"></i>
+                                    {{ request.requester.full_name }}
+                                </p>
+                                <p class="mt-2 flex items-center text-sm text-gray-300 sm:mt-0 sm:ml-6">
+                                    <i class="fas fa-building mr-1.5 text-gray-400"></i>
+                                    {{ request.department.name }}
+                                </p>
+                            </div>
+                            <div class="mt-2 flex items-center text-sm text-gray-400 sm:mt-0">
+                                <p>{{ request.purpose[:50] }}{% if request.purpose|length > 50 %}...{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% if current_user.role.value in ['superadmin', 'manager'] and request.status.value == 'Approved' %}
+                <div class="flex justify-end px-4 py-2 bg-gray-800">
+                    <button onclick="showRejectModal('{{ request.id }}', '{{ request.request_no }}')" class="mr-2 px-3 py-1 bg-red-600 text-white rounded-md text-sm hover:bg-red-700">
+                        Reject
+                    </button>
+                    <a href="{{ url_for('stock_issue.issue_form', request_id=request.id) }}" class="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">
+                        Issue Stock
+                    </a>
+                </div>
+                {% endif %}
+            </li>
+            {% else %}
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <p class="text-sm text-gray-400">No recent requests found.</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg leading-6 font-medium text-white">Low Stock Alerts</h3>
+                <a href="{{ url_for('low_stock.alerts') }}" class="text-sm text-indigo-400 hover:text-indigo-300">
+                    View All <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            <div class="mt-5">
+                {% if low_stock %}
+                    {% for balance, item, location in low_stock %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-700">
+                        <div>
+                            <p class="text-sm font-medium text-white">{{ item.name }}</p>
+                            <p class="text-xs text-gray-400">{{ location.office }} - {{ location.room }}</p>
+                            <p class="text-xs text-gray-500">Threshold: {{ item.low_stock_threshold }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {% if balance.quantity == 0 %}bg-red-900 text-red-200
+                                {% elif balance.quantity <= (item.low_stock_threshold|float * 0.5) %}bg-orange-900 text-orange-200
+                                {% else %}bg-yellow-900 text-yellow-200{% endif %}">
+                                {{ balance.quantity }} left
+                            </span>
+                            {% if balance.quantity == 0 %}
+                            <p class="text-xs text-red-400 mt-1">Out of stock</p>
+                            {% elif balance.quantity <= (item.low_stock_threshold|float * 0.5) %}
+                            <p class="text-xs text-orange-400 mt-1">Critical</p>
+                            {% else %}
+                            <p class="text-xs text-yellow-400 mt-1">Low stock</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle text-green-400 text-2xl mb-2"></i>
+                        <p class="text-sm text-gray-400">No low stock alerts</p>
                     </div>
                 {% endif %}
             </div>
-        </div>
     </div>
 
-    <!-- Modern Statistics Cards -->
-    <div class="row mb-5 g-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <div class="icon-container bg-primary bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-cube fa-2x text-primary"></i>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-2 text-primary">{{ total_items }}</h2>
-                    <p class="mb-0 fw-medium text-muted">Total Items</p>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ items_progress }}%"></div>
-                        </div>
-                        <small class="text-muted mt-1">{{ total_items }} items registered</small>
-                    </div>
-                </div>
-            </div>
+    <!-- Quick Actions -->
+    <div class="bg-gray-800 shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-white">Quick Actions</h3>
         </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 p-4">
+            <a href="{{ url_for('stock_issue.create_request') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-150 ease-in-out">
+                <i class="fas fa-plus mr-2"></i>Create Request
+            </a>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <div class="icon-container bg-success bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-map-marker-alt fa-2x text-success"></i>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-2 text-success">{{ total_locations }}</h2>
-                    <p class="mb-0 fw-medium text-muted">Storage Locations</p>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ locations_progress }}%"></div>
-                        </div>
-                        <small class="text-muted mt-1">{{ total_locations }} storage locations</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <a href="{{ url_for('stock_entry.balances') }}" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-150 ease-in-out">
+                <i class="fas fa-boxes mr-2"></i>View Stock
+            </a>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <div class="icon-container bg-warning bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-clock fa-2x text-warning"></i>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-2 text-warning">{{ pending_requests }}</h2>
-                    <p class="mb-0 fw-medium text-muted">Pending Approvals</p>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ pending_progress }}%"></div>
-                        </div>
-                        <small class="text-muted mt-1">{% if pending_requests > 0 %}{{ pending_requests }} awaiting approval{% else %}All requests processed{% endif %}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+            {% if current_user.role.value == 'hod' %}
+            <a href="{{ url_for('approvals.pending') }}" class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-150 ease-in-out">
+                <i class="fas fa-check-circle mr-2"></i>Pending Approvals
+            </a>
+            {% endif %}
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card dashboard-card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="d-flex align-items-center justify-content-center mb-3">
-                        <div class="icon-container bg-danger bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
-                        </div>
-                    </div>
-                    <h2 class="display-5 fw-bold mb-2 text-danger">{{ low_stock|length }}</h2>
-                    <p class="mb-0 fw-medium text-muted">Low Stock Alerts</p>
-                    <div class="mt-3">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ low_stock_progress }}%"></div>
-                        </div>
-                        <small class="text-muted mt-1">{% if low_stock|length > 0 %}{{ low_stock|length }} items need restocking{% else %}Stock levels optimal{% endif %}</small>
-                    </div>
-                </div>
-            </div>
+            {% if current_user.role.value in ['superadmin', 'manager'] %}
+            <a href="{{ url_for('stock_entry.entry_form') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-150 ease-in-out">
+                <i class="fas fa-plus-circle mr-2"></i>Stock Entry
+            </a>
+            {% endif %}
+            
+            <a href="{{ url_for('stock_issue.request_tracker') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-center transition duration-150 ease-in-out">
+                <i class="fas fa-search mr-2"></i>Track Request
+            </a>
         </div>
     </div>
-
-    <div class="row">
-        <!-- Recent Stock Entries -->
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Recent Stock Entries</h5>
-                    <a href="{{ url_for('main.stock_entries') }}" class="btn btn-sm btn-outline-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    {% if recent_entries %}
-                        <div class="list-group list-group-flush">
-                            {% for entry in recent_entries %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">{{ entry.item.name }}</h6>
-                                    <small class="text-muted">{{ entry.location.office }} - {{ entry.location.room_store }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success">+{{ entry.quantity_procured }}</span>
-                                    <br>
-                                    <small class="text-muted">{{ entry.created_at.strftime('%m/%d') }}</small>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No recent stock entries.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Stock Requests -->
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-minus-circle me-2"></i>Recent Issue Requests</h5>
-                    <a href="{{ url_for('main.stock_issues') }}" class="btn btn-sm btn-outline-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    {% if recent_requests %}
-                        <div class="list-group list-group-flush">
-                            {% for request in recent_requests %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">{{ request.request_number }}</h6>
-                                    <small class="text-muted">{{ request.requester.name }} - {{ request.department.name }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge {% if request.status == 'approved' %}bg-success{% elif request.status == 'pending' %}bg-warning{% elif request.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
-                                        {{ request.status.title() }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">{{ request.created_at.strftime('%m/%d') }}</small>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No recent issue requests.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Low Stock Alert -->
-    {% if low_stock %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for balance, item, location in low_stock %}
-                        <div class="col-lg-4 col-md-6 mb-2">
-                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
-                                <div>
-                                    <strong>{{ item.name }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ location.office }} - {{ location.room_store }}</small>
-                                </div>
-                                <span class="badge bg-danger">{{ balance.balance }}</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Rejection Modal -->
+<div id="rejectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-lg p-6 w-96 mx-4">
+        <h3 class="text-lg font-medium text-white mb-4">Reject Stock Request</h3>
+        <form id="rejectionForm" method="POST" action="">
+            <div class="mb-4">
+                <label class="block text-gray-300 text-sm font-bold mb-2">Reason for Rejection*</label>
+                <textarea name="remarks" required rows="4" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white" placeholder="Please provide a reason for rejecting this request..."></textarea>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="hideRejectModal()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Reject Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showRejectModal(requestId, requestNo) {
+    document.getElementById('rejectionForm').action = `/requests/${requestId}/reject`;
+    document.getElementById('rejectionModal').classList.remove('hidden');
+    document.getElementById('rejectionModal').classList.add('flex');
+}
+
+function hideRejectModal() {
+    document.getElementById('rejectionModal').classList.add('hidden');
+    document.getElementById('rejectionModal').classList.remove('flex');
+}
+</script>
 {% endblock %}

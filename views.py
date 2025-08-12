@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from app import db
-from models import (Item, User, Department, Employee, Location, StockEntry, 
+from database import db
+from models import (Item, User, Department, Employee, Location, StockEntry,
                    StockIssueRequest, StockIssueItem, StockBalance, AuditLog,
                    get_stock_balance, update_stock_balance)
-from forms import (ItemForm, DepartmentForm, EmployeeForm, LocationForm, 
+from forms import (ItemForm, DepartmentForm, EmployeeForm, LocationForm,
                   StockEntryForm, StockIssueRequestForm, StockIssueItemForm, ApprovalForm)
 from datetime import datetime
 import json
@@ -45,7 +45,7 @@ def dashboard():
     elif current_user.role == 'hod' and user_department:
         # HOD sees pending requests from their department
         pending_requests = StockIssueRequest.query.filter_by(
-            department_id=user_department.id, 
+            department_id=user_department.id,
             status='pending'
         ).count()
         recent_entries = StockEntry.query.order_by(StockEntry.created_at.desc()).limit(5).all()
@@ -55,7 +55,7 @@ def dashboard():
     else:
         # Regular employees see only their requests
         pending_requests = StockIssueRequest.query.filter_by(
-            created_by=current_user.id, 
+            created_by=current_user.id,
             status='pending'
         ).count()
         recent_entries = StockEntry.query.order_by(StockEntry.created_at.desc()).limit(5).all()
@@ -77,7 +77,7 @@ def dashboard():
     pending_progress = min((pending_requests / 20) * 100, 100) if pending_requests > 0 else 2
     low_stock_progress = min((len(low_stock) / 15) * 100, 100) if low_stock else 1
 
-    return render_template('dashboard.html', 
+    return render_template('dashboard.html',
                          total_items=total_items,
                          total_locations=total_locations,
                          pending_requests=pending_requests,
@@ -631,8 +631,8 @@ def stock_issue_detail(id):
     item_form = StockIssueItemForm(user=current_user)
     approval_form = ApprovalForm()
 
-    return render_template('stock/issue_detail.html', 
-                         request=request_obj, 
+    return render_template('stock/issue_detail.html',
+                         request=request_obj,
                          item_form=item_form,
                          approval_form=approval_form)
 
@@ -677,7 +677,7 @@ def approve_issue_request(id):
         if action == 'approve':
             # Check if current user is HOD of the requesting department
             requesting_department = request_obj.department
-            is_department_hod = (current_user.role == 'hod' and 
+            is_department_hod = (current_user.role == 'hod' and
                                requesting_department.hod_id == current_user.id)
 
             if is_department_hod:
@@ -801,18 +801,16 @@ def stock_report():
 
     query = db.session.query(StockBalance, Item, Location).join(Item).join(Location)
 
-    # Filter based on user's department and warehouse mapping
-    user_employee = Employee.query.filter_by(user_id=current_user.id).first()
-
-    if current_user.role != 'admin' and user_employee:
-        # Non-admin users only see stock from their assigned warehouse
-        if user_employee.warehouse_id:
-            if current_user.role in ['hod']:
-                # HODs and approvers can see all locations (you can refine this)
-                pass
-            else:
-                # Regular employees only see their assigned warehouse
-                query = query.filter(Location.id == user_employee.warehouse_id)
+    # Filter based on user's assigned warehouses
+    if current_user.role.value not in ['superadmin', 'manager']:
+        # Non-admin users only see stock from their assigned warehouses
+        accessible_warehouses = current_user.get_accessible_warehouses()
+        if accessible_warehouses:
+            warehouse_ids = [w.id for w in accessible_warehouses]
+            query = query.filter(Location.id.in_(warehouse_ids))
+        else:
+            # No warehouse access - show no data
+            query = query.filter(Location.id == -1)
 
     if item_filter:
         query = query.filter(Item.name.contains(item_filter))
@@ -830,11 +828,11 @@ def stock_report():
         stock_requests_summary = []
         for dept in departments:
             pending_count = StockIssueRequest.query.filter_by(
-                department_id=dept.id, 
+                department_id=dept.id,
                 status='pending'
             ).count()
             approved_count = StockIssueRequest.query.filter_by(
-                department_id=dept.id, 
+                department_id=dept.id,
                 status='approved'
             ).count()
             stock_requests_summary.append({
@@ -846,20 +844,13 @@ def stock_report():
         departments = []
         stock_requests_summary = []
 
-    if current_user.role == 'admin':
-        locations = Location.query.filter_by(is_active=True).all()
-    elif user_employee and user_employee.warehouse_id:
-        if current_user.role in ['hod']:
-            locations = Location.query.filter_by(is_active=True).all()
-        else:
-            locations = Location.query.filter(
-                Location.id == user_employee.warehouse_id,
-                Location.is_active == True
-            ).all()
+    if current_user.role in ['admin', 'superadmin']:
+        locations = Location.query.all()
     else:
-        locations = []
+        # Get user's assigned warehouses
+        locations = current_user.get_accessible_warehouses()
 
-    return render_template('reports/stock_report.html', 
+    return render_template('reports/stock_report.html',
                          stock_data=stock_data,
                          items=items,
                          locations=locations,
@@ -892,15 +883,15 @@ def department_usage_report():
     for dept in departments:
         total_requests = StockIssueRequest.query.filter_by(department_id=dept.id).count()
         pending_requests = StockIssueRequest.query.filter_by(
-            department_id=dept.id, 
+            department_id=dept.id,
             status='pending'
         ).count()
         approved_requests = StockIssueRequest.query.filter_by(
-            department_id=dept.id, 
+            department_id=dept.id,
             status='approved'
         ).count()
         issued_requests = StockIssueRequest.query.filter_by(
-            department_id=dept.id, 
+            department_id=dept.id,
             status='issued'
         ).count()
 
@@ -1015,10 +1006,10 @@ def edit_user(id):
             flash('User updated successfully.', 'success')
             return redirect(url_for('main.user_management'))
 
-    return render_template('admin/edit_user.html', 
+    return render_template('admin/edit_user.html',
                          user=user,
                          employee=employee,
-                         departments=departments, 
+                         departments=departments,
                          locations=locations)
 
 @main_bp.route('/admin/users/delete/<int:id>')
@@ -1065,6 +1056,10 @@ def delete_user(id):
 @main_bp.route('/api/stock_balance/<int:item_id>/<int:location_id>')
 @login_required
 def api_stock_balance(item_id, location_id):
+    # Check if user has access to this warehouse
+    if not current_user.can_access_warehouse(location_id):
+        return jsonify({'error': 'Access denied'}), 403
+    
     balance = get_stock_balance(item_id, location_id)
     return jsonify({'balance': balance})
 
@@ -1089,22 +1084,8 @@ def api_employee_details(employee_id):
 @main_bp.route('/api/items_by_location/<int:location_id>')
 @login_required
 def api_items_by_location(location_id):
-    # Check if user has access to this location based on their department/warehouse mapping
-    user_employee = Employee.query.filter_by(user_id=current_user.id).first()
-
-    # Admin users can see all locations
-    if current_user.role == 'admin':
-        allowed_locations = [location_id]
-    elif user_employee:
-        # Users can see items from their assigned warehouse and department-related locations
-        allowed_locations = [location_id] if (
-            user_employee.warehouse_id == location_id or
-            current_user.role in ['hod']
-        ) else []
-    else:
-        allowed_locations = []
-
-    if location_id not in allowed_locations and current_user.role != 'admin':
+    # Check if user has access to this warehouse
+    if not current_user.can_access_warehouse(location_id):
         return jsonify([])  # Return empty if no access
 
     # Get items that have stock in this location
